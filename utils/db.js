@@ -3,6 +3,41 @@ const { Client } = require('pg');
 const debug = require('./debug');
 const { toPositiveNumberOrDefault } = require('../utils/validation');
 
+let count = 0;
+let time = new Date();
+
+function timeFormatter(timeDelta) {
+  const sec = timeDelta / 1000;
+  if (sec < 180) {
+    return `${sec.toFixed(4)} sec`;
+  }
+  const min = sec / 60;
+  if (min < 120) {
+    return `${min.toFixed(4)} min`;
+  }
+  const hours = min / 60;
+  return `${hours.toFixed(4)} hours`;
+}
+
+function logging(sqlQuery, values) {
+  console.info('-------------------------------------------------------------');
+  const curtime = new Date();
+  const timeDelta = curtime - time;
+  console.info(
+    'query count:',
+    count,
+    '  -  ',
+    `time since last query: ${timeFormatter(timeDelta)}`,
+  );
+  time = curtime;
+  count += 1;
+  console.info('-q-q-q-');
+  console.info(sqlQuery);
+  console.info('-v-v-v-');
+  console.info(values);
+  console.info('-+-+-+-');
+}
+
 /**
  * Execute an SQL query.
  *
@@ -12,6 +47,8 @@ const { toPositiveNumberOrDefault } = require('../utils/validation');
  * @returns {Promise} Promise representing the result of the SQL query
  */
 async function query(sqlQuery, values = []) {
+  logging(sqlQuery, values);
+
   const connectionString = process.env.DATABASE_URL;
 
   const client = new Client({ connectionString });
@@ -57,12 +94,9 @@ async function pagedQuery(
 
 async function conditionalUpdate(table, id, fields, values) {
   const filteredFields = fields.filter(i => typeof i === 'string');
-  const filteredValues = values
-    .filter(
-      i => typeof i === 'string' ||
-      typeof i === 'number' ||
-      i instanceof Date,
-    );
+  const filteredValues = values.filter(
+    i => typeof i === 'string' || typeof i === 'number' || i instanceof Date,
+  );
 
   if (filteredFields.length === 0) {
     return false;

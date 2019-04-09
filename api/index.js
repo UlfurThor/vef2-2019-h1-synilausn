@@ -2,10 +2,7 @@ const express = require('express');
 const catchErrors = require('../utils/catchErrors');
 const { requireAuth, checkUserIsAdmin } = require('../authentication/auth');
 
-const requireAdmin = [
-  requireAuth,
-  checkUserIsAdmin,
-];
+const requireAdmin = [requireAuth, checkUserIsAdmin];
 
 const {
   listCategories,
@@ -39,11 +36,7 @@ const {
   deleteCartLine,
 } = require('./cart');
 
-const {
-  listOrders,
-  createOrder,
-  listOrder,
-} = require('./orders');
+const { listOrders, createOrder, listOrder } = require('./orders');
 
 const router = express.Router();
 
@@ -72,34 +65,78 @@ function indexRoute(req, res) {
   });
 }
 
-router.get('/', indexRoute);
+function pathLog(req, res, next) {
+  const { originalUrl, params, query, body } = req;
+  const { origin } = req.headers;
+  const p = { originalUrl, params, query, body, origin };
+  console.info();
+  console.info();
+  console.info();
+  console.info();
+  console.info('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+  console.info(p);
+  console.info('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+  return next();
+}
 
-router.get('/users', requireAdmin, catchErrors(listUsers));
-router.get('/users/me', requireAuth, catchErrors(currentUser));
-router.patch('/users/me', requireAuth, catchErrors(updateCurrentUser));
-router.get('/users/:id', requireAdmin, catchErrors(listUser));
-router.patch('/users/:id', requireAdmin, catchErrors(updateUser));
+router.get('/', pathLog, indexRoute);
 
-router.get('/products', catchErrors(listProducts));
-router.post('/products', requireAdmin, catchErrors(createProduct));
-router.get('/products/:id', catchErrors(listProduct));
-router.patch('/products/:id', requireAdmin, catchErrors(updateProduct));
-router.delete('/products/:id', requireAdmin, catchErrors(deleteProduct));
+router.get('/users', pathLog, requireAdmin, catchErrors(listUsers));
+router.get('/users/me', pathLog, requireAuth, catchErrors(currentUser));
+router.patch('/users/me', pathLog, requireAuth, catchErrors(updateCurrentUser));
+router.get('/users/:id', pathLog, requireAdmin, catchErrors(listUser));
+router.patch('/users/:id', pathLog, requireAdmin, catchErrors(updateUser));
 
-router.get('/categories', catchErrors(listCategories));
-router.post('/categories', requireAdmin, catchErrors(createCategory));
-router.get('/categories/:id', catchErrors(listCategory));
-router.patch('/categories/:id', requireAdmin, catchErrors(updateCategory));
-router.delete('/categories/:id', requireAdmin, catchErrors(deleteCategory));
+router.get('/products', pathLog, catchErrors(listProducts));
+router.post('/products', pathLog, requireAdmin, catchErrors(createProduct));
+router.get('/products/:id', pathLog, catchErrors(listProduct));
+router.patch(
+  '/products/:id',
+  pathLog,
+  requireAdmin,
+  catchErrors(updateProduct),
+);
+router.delete(
+  '/products/:id',
+  pathLog,
+  requireAdmin,
+  catchErrors(deleteProduct),
+);
 
-router.get('/cart', requireAuth, catchErrors(listCart));
-router.post('/cart', requireAuth, catchErrors(addToCart));
-router.get('/cart/line/:id', requireAuth, catchErrors(listCartLine));
-router.patch('/cart/line/:id', requireAuth, catchErrors(updateCartLine));
-router.delete('/cart/line/:id', requireAuth, catchErrors(deleteCartLine));
+router.get('/categories', pathLog, catchErrors(listCategories));
+router.post('/categories', pathLog, requireAdmin, catchErrors(createCategory));
+router.get('/categories/:id', pathLog, catchErrors(listCategory));
+router.patch(
+  '/categories/:id',
+  pathLog,
+  requireAdmin,
+  catchErrors(updateCategory),
+);
+router.delete(
+  '/categories/:id',
+  pathLog,
+  requireAdmin,
+  catchErrors(deleteCategory),
+);
 
-router.get('/orders', requireAuth, catchErrors(listOrders));
-router.post('/orders', requireAuth, catchErrors(createOrder));
-router.get('/orders/:id', requireAuth, catchErrors(listOrder));
+router.get('/cart', pathLog, requireAuth, catchErrors(listCart));
+router.post('/cart', pathLog, requireAuth, catchErrors(addToCart));
+router.get('/cart/line/:id', pathLog, requireAuth, catchErrors(listCartLine));
+router.patch(
+  '/cart/line/:id',
+  pathLog,
+  requireAuth,
+  catchErrors(updateCartLine),
+);
+router.delete(
+  '/cart/line/:id',
+  pathLog,
+  requireAuth,
+  catchErrors(deleteCartLine),
+);
+
+router.get('/orders', pathLog, requireAuth, catchErrors(listOrders));
+router.post('/orders', pathLog, requireAuth, catchErrors(createOrder));
+router.get('/orders/:id', pathLog, requireAuth, catchErrors(listOrder));
 
 module.exports = router;

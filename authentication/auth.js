@@ -46,25 +46,23 @@ passport.use(new Strategy(jwtOptions, strat));
 app.use(passport.initialize());
 
 function requireAuth(req, res, next) {
-  return passport.authenticate(
-    'jwt',
-    { session: false },
-    (err, user, info) => {
-      if (err) {
-        return next(err);
-      }
+  return passport.authenticate('jwt', { session: false }, (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
 
-      if (!user) {
-        const error = info && info.name === 'TokenExpiredError' ?
-          'expired token' : 'invalid token';
+    if (!user) {
+      const error =
+        info && info.name === 'TokenExpiredError' ?
+          'expired token' :
+          'invalid token';
 
-        return res.status(401).json({ error });
-      }
+      return res.status(401).json({ error });
+    }
 
-      req.user = user;
-      return next();
-    },
-  )(req, res, next);
+    req.user = user;
+    return next();
+  })(req, res, next);
 }
 
 function checkUserIsAdmin(req, res, next) {
@@ -76,10 +74,23 @@ function checkUserIsAdmin(req, res, next) {
 }
 
 async function registerRoute(req, res) {
+  const { originalUrl, params, query, body } = req;
+  const { origin } = req.headers;
+  const p = { originalUrl, params, query, body, origin };
+  console.info();
+  console.info();
+  console.info();
+  console.info();
+  console.info('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+  console.info(p);
+  console.info('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
   const { username, password, email } = req.body;
 
-  const validationMessage =
-    await users.validateUser({ username, password, email });
+  const validationMessage = await users.validateUser({
+    username,
+    password,
+    email,
+  });
 
   if (validationMessage.length > 0) {
     return res.status(400).json({ errors: validationMessage });
@@ -93,6 +104,16 @@ async function registerRoute(req, res) {
 }
 
 async function loginRoute(req, res) {
+  const { originalUrl, params, query, body } = req;
+  const { origin } = req.headers;
+  const p = { originalUrl, params, query, body, origin };
+  console.info();
+  console.info();
+  console.info();
+  console.info();
+  console.info('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+  console.info(p);
+  console.info('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
   const { username, password } = req.body;
 
   const validations = [];
@@ -121,8 +142,10 @@ async function loginRoute(req, res) {
     return res.status(401).json({ error: 'No such user' });
   }
 
-  const passwordIsCorrect =
-    await users.comparePasswords(password, user.password);
+  const passwordIsCorrect = await users.comparePasswords(
+    password,
+    user.password,
+  );
 
   if (passwordIsCorrect) {
     const payload = { id: user.id };

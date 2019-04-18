@@ -86,14 +86,14 @@ async function registerRoute(req, res) {
   console.info('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
   const { username, password, email } = req.body;
 
-  const validationMessage = await users.validateUser({
+  const validations = await users.validateUser({
     username,
     password,
     email,
   });
 
-  if (validationMessage.length > 0) {
-    return res.status(400).json({ errors: validationMessage });
+  if (validations.length > 0) {
+    return res.status(400).json(validations);
   }
 
   const result = await users.createUser(username, password, email);
@@ -139,7 +139,11 @@ async function loginRoute(req, res) {
   const user = await users.findByUsername(username);
 
   if (!user) {
-    return res.status(401).json({ error: 'No such user' });
+    validations.push({
+      field: 'username',
+      error: 'No such user',
+    });
+    return res.status(401).json(validations);
   }
 
   const passwordIsCorrect = await users.comparePasswords(
@@ -161,7 +165,11 @@ async function loginRoute(req, res) {
     });
   }
 
-  return res.status(401).json({ error: 'Invalid password' });
+  validations.push({
+    field: 'password',
+    error: 'Invalid password',
+  });
+  return res.status(401).json(validations);
 }
 
 app.post('/users/register', catchErrors(registerRoute));
